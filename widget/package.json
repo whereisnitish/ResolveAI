@@ -1,0 +1,19 @@
+{
+  "name": "@resolveai/widget",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Embeddable ResolveAI website chat widget",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --serve",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "jsdom": "^31.0.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

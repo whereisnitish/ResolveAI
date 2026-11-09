@@ -1,0 +1,28 @@
+# Runtime dependencies. Ranges pin to the major versions verified in this repo.
+Django>=6.0,<6.1
+djangorestframework>=3.18,<3.19
+drf-spectacular>=0.30,<0.31
+django-cors-headers>=4.9,<5
+django-environ>=0.14,<0.15
+psycopg[binary,pool]>=3.3,<3.4
+argon2-cffi>=25.1,<26
+channels>=4.3,<5
+channels-redis>=4.3,<5
+celery>=5.7,<5.8
+redis>=8.1,<9
+pgvector>=0.5,<0.6
+uvicorn[standard]>=0.54,<0.55
+gunicorn>=26,<27
+django-storages[s3]>=1.14,<2
+# AI (Phase 3)
+anthropic>=2.6,<3
+openai>=3.46,<4
+langgraph>=1.2,<2
+pypdf>=7.0,<8
+beautifulsoup4>=4.15,<5
+# Billing / integrations (Phase 4)
+cryptography>=50,<51
+httpx>=0.28,<0.29
+# Production readiness (Phase 5)
+sentry-sdk[django,celery]>=2.74,<3
+whitenoise>=6.12,<7

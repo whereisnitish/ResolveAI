@@ -1,0 +1,112 @@
+# Local development stack for ResolveAI.
+#   docker compose up -d db redis          # infra only (run Django/Next locally)
+#   docker compose up --build              # full stack
+name: resolveai
+
+x-backend-env: &backend-env
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    DJANGO_ENV: ${DJANGO_ENV:-dev}
+    POSTGRES_HOST: db
+    POSTGRES_PORT: "5432"
+    REDIS_URL: redis://redis:6379/0
+    CELERY_BROKER_URL: redis://redis:6379/1
+    CELERY_RESULT_BACKEND: redis://redis:6379/2
+    CHANNEL_LAYER_REDIS_URL: redis://redis:6379/3
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-resolveai}
+      POSTGRES_USER: ${POSTGRES_USER:-resolveai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resolveai-local-password}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resolveai} -d ${POSTGRES_DB:-resolveai}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_HOST_PORT:-6380}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    <<: *backend-env
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      target: dev
+    <<: *backend-env
+    command: celery -A config worker -l info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ./backend
+      target: dev
+    <<: *backend-env
+    command: celery -A config beat -l info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8000
+      # Browser-side URLs (resolved from the host machine, not the compose network).
+      NEXT_PUBLIC_WS_URL: ws://localhost:8000
+      NEXT_PUBLIC_WIDGET_SCRIPT_URL: http://localhost:3002/widget.js
+      NEXT_PUBLIC_WIDGET_API_URL: http://localhost:8000
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:

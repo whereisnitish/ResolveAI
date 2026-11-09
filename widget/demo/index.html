@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Store — ResolveAI widget demo</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 0; color: #1f2937; background: #fafaf9; }
+      header { background: #111827; color: #fff; padding: 16px 32px; font-weight: 700; }
+      main { max-width: 720px; margin: 48px auto; padding: 0 24px; line-height: 1.6; }
+      code { background: #e5e7eb; padding: 2px 6px; border-radius: 4px; }
+      .warn { background: #fef3c7; border: 1px solid #f59e0b; padding: 12px 16px; border-radius: 8px; }
+    </style>
+  </head>
+  <body>
+    <header>Acme Store (demo customer website)</header>
+    <main>
+      <h1>Widget demo</h1>
+      <p>This page simulates a customer's website with the ResolveAI chat widget installed.</p>
+      <p id="status" class="warn" hidden>
+        Add <code>?ws=YOUR_WIDGET_WORKSPACE_ID</code> to the URL (copy it from Dashboard → Settings → Widget).
+      </p>
+      <p>Optional: <code>&amp;api=http://localhost:8000</code> (default).</p>
+      <p><button onclick="window.ResolveAI && window.ResolveAI.open()">Open chat programmatically</button></p>
+    </main>
+    <script>
+      // Equivalent to the production snippet:
+      // <script src="https://cdn.resolveai.com/widget.js" data-workspace-id="ws_..."><\/script>
+      const params = new URLSearchParams(location.search);
+      const ws = params.get("ws");
+      if (!ws) {
+        document.getElementById("status").hidden = false;
+      } else {
+        const s = document.createElement("script");
+        s.src = "./widget.js";
+        s.async = true;
+        s.dataset.workspaceId = ws;
+        s.dataset.apiUrl = params.get("api") || "http://localhost:8000";
+        document.body.appendChild(s);
+      }
+    </script>
+  </body>
+</html>
